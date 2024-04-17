@@ -412,20 +412,16 @@ abstract class JobAbstract
     public function getSchedulePlain(): array
     {
         return [
-            "id"         => $this->id,
-            "expression" => $this->getExpression(),
-
-            "readable"               => $this->translateNextRunTime(),
-            "is_prevent_overlapping" => $this->isPreventOverlapping(),
-
-            "last_run_time"       => $this->getPreviousRunTime(),
-            "time_since_last_run" => static::secondsToTime(time() - strtotime($this->getPreviousRunTime())) . '之前',
-
+            "id"                      => $this->id,
+            "expression"              => $this->getExpression(),
+            "readable"                => $this->translateNextRunTime(),
+            "is_prevent_overlapping"  => (int)$this->isPreventOverlapping(),
+            "last_run_time"           => $this->getPreviousRunTime(),
+            "time_since_last_run"     => static::secondsToTime(time() - strtotime($this->getPreviousRunTime())) . '之前',
             "next_run_time"           => $this->getNextRunTime(),
             "next_run_remaining_time" => static::secondsToTime(strtotime($this->getNextRunTime()) - time()),
-
-            "timezone"    => $this->timezone->getName(),
-            "description" => $this->description,
+            "timezone"                => $this->timezone->getName(),
+            "description"             => $this->description,
         ];
     }
 

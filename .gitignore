@@ -1,4 +1,5 @@
 /vendor/
+/examples/log.txt
 /.build/
 /.phpstan.txt
 /nohup.out
