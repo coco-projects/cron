@@ -394,14 +394,31 @@ abstract class JobAbstract
     {
         $cron = new CronExpression($this->getExpression());
 
-        return $cron->getNextRunDate()->format('Y-m-d H:i:s');
+        return $cron->getNextRunDate(timeZone: $this->timezone->getName())->format('Y-m-d H:i:s');
     }
 
     public function getPreviousRunTime(): string
     {
         $cron = new CronExpression($this->getExpression());
 
-        return $cron->getPreviousRunDate()->format('Y-m-d H:i:s');
+        return $cron->getPreviousRunDate(allowCurrentDate: true, timeZone: $this->timezone->getName())
+            ->format('Y-m-d H:i:s');
+    }
+
+
+    public function getMultiRunTime($total = 5): array
+    {
+        $cron = new CronExpression($this->getExpression());
+
+        $res = $cron->getMultipleRunDates(total: $total, timeZone: $this->timezone->getName());
+
+        $result = [];
+
+        foreach ($res as $k => $v) {
+            $result[] = $v->format('Y-m-d H:i:s');
+        }
+
+        return $result;
     }
 
     public function translateNextRunTime(): string
@@ -411,17 +428,23 @@ abstract class JobAbstract
 
     public function getSchedulePlain(): array
     {
+        $prev = $this->getPreviousRunTime();
+        $next = $this->getNextRunTime();
+
         return [
-            "id"                      => $this->id,
-            "expression"              => $this->getExpression(),
-            "readable"                => $this->translateNextRunTime(),
-            "is_prevent_overlapping"  => (int)$this->isPreventOverlapping(),
-            "last_run_time"           => $this->getPreviousRunTime(),
-            "time_since_last_run"     => static::secondsToTime(time() - strtotime($this->getPreviousRunTime())) . '之前',
-            "next_run_time"           => $this->getNextRunTime(),
-            "next_run_remaining_time" => static::secondsToTime(strtotime($this->getNextRunTime()) - time()),
-            "timezone"                => $this->timezone->getName(),
-            "description"             => $this->description,
+            "id"                     => $this->id,
+            "expression"             => $this->getExpression(),
+            "readable"               => $this->translateNextRunTime(),
+            "is_prevent_overlapping" => (int)$this->isPreventOverlapping(),
+
+            "last_run_time"       => $prev,
+            "time_since_last_run" => static::secondsToTime(time() - strtotime($prev)) . '之前',
+
+            "next_run_time"           => $next,
+            "next_run_remaining_time" => static::secondsToTime(strtotime($next) - time()),
+
+            "timezone"    => $this->timezone->getName(),
+            "description" => $this->description,
         ];
     }
 
@@ -449,7 +472,7 @@ abstract class JobAbstract
             $timeString[] = $minutes . '分';
         }
 
-        if ($seconds > 0) {
+        if ($seconds >= 0) {
             $timeString[] = $seconds . '秒';
         }
 
